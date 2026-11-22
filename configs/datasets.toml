@@ -1,0 +1,34 @@
+# Prompt and benchmark datasets. Checked against the Hugging Face API on 2026-11-22.
+# Files land in data/raw/<id>/ (git-ignored).
+#
+# Split policy (see docs/evaluation-protocol.md):
+#   - refusal directions are computed on the `train` files only;
+#   - refusal evaluation uses the `test` files only, so no prompt is used twice.
+
+[[datasets]]
+id = "harmful"
+repo = "mlabonne/harmful_behaviors"
+files = ["data/train-00000-of-00001.parquet", "data/test-00000-of-00001.parquet"]
+text_column = "text"
+purpose = "Prompts the original models refuse (AdvBench-derived)"
+
+[[datasets]]
+id = "harmless"
+repo = "mlabonne/harmless_alpaca"
+files = ["data/train-00000-of-00001.parquet", "data/test-00000-of-00001.parquet"]
+text_column = "text"
+purpose = "Benign instructions (Alpaca-derived), contrast set and KL set"
+
+[[datasets]]
+id = "xstest"
+repo = "Paul/XSTest"
+files = ["xstest_prompts.csv"]
+text_column = "prompt"
+purpose = "Over-refusal: safe prompts that look unsafe (label == 'safe')"
+
+[[datasets]]
+id = "mmlu"
+repo = "cais/mmlu"
+files = ["all/test-00000-of-00001.parquet"]
+text_column = "question"
+purpose = "Capability check (multiple choice, 57 subjects)"

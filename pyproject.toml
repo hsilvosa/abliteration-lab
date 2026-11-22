@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "abliteration-lab"
+version = "0.1.0"
+description = "Download, evaluate and build abliterated (refusal-ablated) LLMs on a single consumer GPU."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+dependencies = [
+    "huggingface_hub>=0.30",
+    "requests>=2.31",
+    "pandas>=2.1",
+    "pyarrow>=15",
+    "numpy>=1.26",
+    "tabulate>=0.9",
+]
+
+[project.optional-dependencies]
+# Own abliteration runs (activations, weight edits, KL). Install the CUDA build of torch.
+abliterate = [
+    "torch>=2.4",
+    "transformers>=4.56",
+    "accelerate>=1.0",
+    "safetensors>=0.4",
+    "bitsandbytes>=0.45",
+]
+dev = ["pytest>=8"]
+
+[project.scripts]
+abl = "abliteration_lab.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]

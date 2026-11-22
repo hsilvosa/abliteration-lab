@@ -1,0 +1,30 @@
+# Settings for our own abliteration run (transformers, bf16).
+
+source_model = "qwen3-4b-instruct-2507"   # id from configs/models.toml (group "source")
+output_name = "qwen3-4b-instruct-2507-abl"
+dtype = "bfloat16"
+device = "cuda"
+load_in_4bit = false                      # bitsandbytes; direction search only, no saved edit
+
+[directions]
+n_train = 256              # prompts per class (harmful / harmless) from the train split
+batch_size = 16
+max_prompt_tokens = 256
+# Candidate layers as fractions of depth; directions are computed for each.
+layer_fractions = [0.3, 0.4, 0.5, 0.6, 0.7]
+# "mean_diff" (Arditi et al.) or "projected" (remove the harmless-mean component).
+kind = "projected"
+
+[selection]
+n_val = 64                 # held-out harmful prompts (from the end of the train split)
+n_kl = 64                  # harmless prompts for first-token KL
+max_new_tokens = 64
+kl_max = 0.2               # reject candidates above this KL
+# Rule: minimum refusals among candidates with KL <= kl_max; ties -> lower KL.
+
+[edit]
+# "orthogonal" (W - r r^T W) or "norm_preserving" (same, then restore column norms).
+mode = "norm_preserving"
+scale = 1.0                # 1.0 removes the full component
+edit_embeddings = true
+layer_range = "all"        # "all" or [start, end) as fractions of depth, e.g. [0.2, 0.9]

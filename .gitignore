@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+.pytest_cache/
+
+# Data and artifacts (regenerable, large)
+data/raw/
+results/raw/
+results/*.csv
+results/*.jsonl
+runs/
+*.gguf
+*.safetensors
+*.bin
+
+# Local overrides and secrets
+.env
+configs/*.local.toml
+private/

@@ -1,0 +1,205 @@
+# Model registry.
+#
+# Every repo and file name below was checked against the Hugging Face API on
+# 2026-11-22. Sizes are the file sizes reported by the API (GB = 1e9 bytes).
+# Claims in `card_claims` are the uploader's own numbers, not measurements of this repo.
+#
+# Fields:
+#   id          local id; files land in <models_dir>/<group>/<id>/
+#   group       core | extended | small | source
+#   role        abliterated | baseline | source
+#   format      gguf (single files) | hf (safetensors snapshot)
+#   repo        Hugging Face repo id
+#   files       exact file names (gguf) or allow patterns (hf)
+#   optional    extra files (vision projector, MTP drafter); skipped unless --with-optional
+#   baseline    id of the unmodified model used for paired comparison
+#   size_gb     total size of `files`
+
+# ---------------------------------------------------------------------------
+# core: the three-way comparison proposed for the RTX 3060 12 GB, plus baselines
+# ---------------------------------------------------------------------------
+
+[[models]]
+id = "gemma4-12b-qat-hauhaucs"
+group = "core"
+role = "abliterated"
+format = "gguf"
+repo = "HauhauCS/Gemma4-12B-QAT-Uncensored-HauhauCS-Balanced"
+files = ["Gemma4-12B-QAT-Uncensored-HauhauCS-Balanced-Q4_K_M.gguf"]
+optional = ["mmproj-Gemma4-12B-QAT-Uncensored-HauhauCS-Balanced-BF16.gguf"]
+baseline = "gemma4-12b-qat-base"
+quant = "Q4_K_M"
+size_gb = 7.38
+license = "gemma"
+method = "Undisclosed uncensoring of the Gemma 4 12B QAT weights"
+card_claims = "0/465 refusals (author test set)"
+
+[[models]]
+id = "gemma4-12b-heretic-culturerevolt"
+group = "core"
+role = "abliterated"
+format = "gguf"
+repo = "culturerevolt/gemma-4-12b-heretic-abliterated-GGUF"
+files = ["gemma-4-12b-heretic-Q4_K_M.gguf"]
+optional = ["gemma-4-12b-heretic-mmproj-f16.gguf"]
+baseline = "gemma4-12b-base"
+quant = "Q4_K_M"
+size_gb = 7.38
+license = "apache-2.0"
+method = "Heretic (optimized directional ablation)"
+card_claims = "not recorded"
+
+[[models]]
+id = "gemma4-12b-qat-heretic-igorls"
+group = "core"
+role = "abliterated"
+format = "gguf"
+repo = "igorls/gemma-4-12B-it-qat-q4_0-unquantized-heretic-GGUF"
+files = ["gemma-4-12B-it-qat-q4_0-unquantized-heretic-Q4_0.gguf"]
+optional = []
+baseline = "gemma4-12b-qat-base"
+quant = "Q4_0"
+size_gb = 6.98
+license = "apache-2.0"
+method = "Heretic v1.3.0, ablated with thinking enabled (v1.1)"
+card_claims = "KL 0.32; ~22% refusals with thinking on (adversarial set)"
+
+[[models]]
+id = "qwen3-14b-abliterated-mlabonne"
+group = "core"
+role = "abliterated"
+format = "gguf"
+repo = "bartowski/mlabonne_Qwen3-14B-abliterated-GGUF"
+files = ["mlabonne_Qwen3-14B-abliterated-Q4_K_M.gguf"]
+optional = []
+baseline = "qwen3-14b-base"
+quant = "Q4_K_M"
+size_gb = 9.00
+license = "apache-2.0"
+method = "Classic abliteration (mlabonne), imatrix quants by bartowski"
+card_claims = "not recorded"
+
+[[models]]
+id = "gemma4-12b-qat-base"
+group = "core"
+role = "baseline"
+format = "gguf"
+repo = "google/gemma-4-12b-it-qat-q4_0-gguf"
+files = ["gemma-4-12b-it-qat-q4_0.gguf"]
+optional = ["mmproj-gemma-4-12b-it-qat-q4_0.gguf"]
+quant = "Q4_0"
+size_gb = 6.98
+license = "apache-2.0"
+method = "Original Google QAT checkpoint"
+card_claims = ""
+
+[[models]]
+id = "gemma4-12b-base"
+group = "core"
+role = "baseline"
+format = "gguf"
+repo = "unsloth/gemma-4-12b-it-GGUF"
+files = ["gemma-4-12b-it-Q4_K_M.gguf"]
+optional = []
+quant = "Q4_K_M"
+size_gb = 7.12
+license = "apache-2.0"
+method = "Original instruct model, same quant type as the culturerevolt file"
+card_claims = ""
+
+[[models]]
+id = "qwen3-14b-base"
+group = "core"
+role = "baseline"
+format = "gguf"
+repo = "bartowski/Qwen_Qwen3-14B-GGUF"
+files = ["Qwen_Qwen3-14B-Q4_K_M.gguf"]
+optional = []
+quant = "Q4_K_M"
+size_gb = 9.00
+license = "apache-2.0"
+method = "Original instruct model, same quantizer and quant as the abliterated file"
+card_claims = ""
+
+# ---------------------------------------------------------------------------
+# extended: larger than 12 GB VRAM; need partial CPU offload (slower)
+# ---------------------------------------------------------------------------
+
+[[models]]
+id = "qwen3.8-27b-abliterated-huihui"
+group = "extended"
+role = "abliterated"
+format = "gguf"
+repo = "huihui-ai/Huihui-Qwen3.8-27B-abliterated-GGUF"
+files = ["Huihui-Qwen3.8-27B-abliterated-UD-IQ4_XS.gguf"]
+optional = ["mmproj-model-bf16.gguf"]
+quant = "UD-IQ4_XS"
+size_gb = 14.40
+license = "apache-2.0"
+method = "Abliteration of the middle layers (huihui-ai)"
+card_claims = "no evals in card"
+
+[[models]]
+id = "gemma4-26b-a4b-qat-hauhaucs"
+group = "extended"
+role = "abliterated"
+format = "gguf"
+repo = "HauhauCS/Gemma4-26B-A4B-QAT-Uncensored-HauhauCS-Balanced-MTP"
+files = ["Gemma4-26B-A4B-QAT-Uncensored-HauhauCS-Balanced-Q4_K_M.gguf"]
+optional = ["mtp-gemma-4-26B-A4B-it.gguf", "mmproj-Gemma4-26B-A4B-QAT-Uncensored-HauhauCS-Balanced-BF16.gguf"]
+quant = "Q4_K_M"
+size_gb = 16.80
+license = "gemma"
+method = "Undisclosed uncensoring of Gemma 4 26B-A4B QAT (MoE, ~4B active)"
+card_claims = "not recorded"
+moe = true
+
+[[models]]
+id = "gemma4-26b-a4b-trevorjs"
+group = "extended"
+role = "abliterated"
+format = "gguf"
+repo = "TrevorJS/gemma-4-26B-A4B-it-uncensored-GGUF"
+files = ["gemma-4-26B-A4B-it-uncensored-Q4_K_M.gguf"]
+optional = []
+quant = "Q4_K_M"
+size_gb = 16.80
+license = "apache-2.0"
+method = "Expert-Granular Abliteration (per-expert directions)"
+card_claims = "1/100 refusals, KL 0.09 (third-party summary of the card)"
+moe = true
+
+# ---------------------------------------------------------------------------
+# small: fast smoke tests of the pipeline
+# ---------------------------------------------------------------------------
+
+[[models]]
+id = "gemma4-e4b-heretic-llmfan46"
+group = "small"
+role = "abliterated"
+format = "gguf"
+repo = "llmfan46/gemma-4-E4B-it-ultra-uncensored-heretic-GGUF"
+files = ["gemma-4-E4B-it-ultra-uncensored-heretic-Q4_K_M.gguf"]
+optional = ["gemma-4-E4B-it-mmproj-BF16.gguf"]
+quant = "Q4_K_M"
+size_gb = 5.34
+license = "apache-2.0"
+method = "Heretic 1.2.0, ARA"
+card_claims = "3/100 refusals, KL 0.0076, MMLU 68.60 vs 69.46"
+
+# ---------------------------------------------------------------------------
+# source: full-precision checkpoints for running our own abliteration
+# ---------------------------------------------------------------------------
+
+[[models]]
+id = "qwen3-4b-instruct-2507"
+group = "source"
+role = "source"
+format = "hf"
+repo = "Qwen/Qwen3-4B-Instruct-2507"
+files = ["*.json", "*.safetensors", "merges.txt", "vocab.json", "LICENSE"]
+optional = []
+size_gb = 8.05
+license = "apache-2.0"
+method = "Original bf16 weights; fits a 12 GB GPU in bf16"
+card_claims = ""

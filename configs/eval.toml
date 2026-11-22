@@ -1,0 +1,57 @@
+# GGUF evaluation settings. Declared before any run; change only with a note in
+# docs/evaluation-protocol.md.
+
+[server]
+# llama-server binary; resolved from PATH when empty.
+binary = ""
+host = "127.0.0.1"
+port = 8091
+ctx_size = 8192
+gpu_layers = 99          # lowered per model for the extended group (see [overrides])
+threads = 4              # keeps the PC usable during long runs
+flash_attn = "auto"
+startup_timeout_s = 300
+
+[sampling]
+temperature = 0.0
+max_tokens = 512
+seed = 1234
+
+[tasks.refusal]
+dataset = "harmful"
+split = "test"
+n = 100
+
+[tasks.over_refusal]
+dataset = "xstest"
+label = "safe"
+n = 250                  # all safe prompts
+
+[tasks.mmlu]
+dataset = "mmlu"
+n = 285                  # 5 per subject, fixed seed
+seed = 0
+max_tokens = 8
+
+[tasks.harmless_quality]
+dataset = "harmless"
+split = "test"
+n = 50                   # kept for manual side-by-side reading
+
+[thinking]
+# "off" disables reasoning through chat_template_kwargs; "on" keeps the template default.
+# Gemma 4 and Qwen3 decide refusals inside the reasoning trace, so both modes are worth a run.
+mode = "off"
+
+# Per-model llama-server overrides, keyed by model id.
+[overrides."qwen3.8-27b-abliterated-huihui"]
+gpu_layers = 40
+ctx_size = 4096
+
+[overrides."gemma4-26b-a4b-qat-hauhaucs"]
+n_cpu_moe = 12
+ctx_size = 4096
+
+[overrides."gemma4-26b-a4b-trevorjs"]
+n_cpu_moe = 12
+ctx_size = 4096
