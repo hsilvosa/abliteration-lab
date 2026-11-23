@@ -12,6 +12,8 @@ from .config import load_registry
 from .paths import RESULTS_DIR
 from .refusal import is_refusal
 
+JUDGE_ID = "qwen3-14b-abliterated-mlabonne"  # judge whose verdicts the report shows
+
 
 def wilson(k: int, n: int, z: float = 1.96) -> tuple[float, float]:
     """95% Wilson score interval for a proportion k/n."""
@@ -60,7 +62,7 @@ def summarize() -> pd.DataFrame:
         except KeyError:
             row.update({"role": "own", "baseline": None})
         rows.append(row)
-        jp = RESULTS_DIR / "judge" / model_id / path.name
+        jp = RESULTS_DIR / "judge" / JUDGE_ID / model_id / path.name
         if task in ("refusal", "over_refusal") and jp.exists():
             verdicts = [json.loads(line)["label"] for line in jp.open(encoding="utf-8") if line.strip()]
             n = len(verdicts)

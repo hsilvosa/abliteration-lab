@@ -101,7 +101,7 @@ def build_parser() -> argparse.ArgumentParser:
     e.set_defaults(func=cmd_eval)
 
     j = sub.add_parser("judge", help="classify saved refusal/over_refusal replies with a local LLM judge")
-    j.add_argument("--judge", default="qwen3-14b-base", help="registry id of the judge model")
+    j.add_argument("--judge", default="qwen3-14b-abliterated-mlabonne", help="registry id of the judge model")
     j.add_argument("--model", action="append", help="model id whose outputs are judged (default: core)")
     j.add_argument("--thinking", default="off", choices=["on", "off"])
     j.set_defaults(func=cmd_judge)
