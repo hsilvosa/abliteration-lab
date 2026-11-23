@@ -23,14 +23,14 @@ The first pair is not a clean quant match; its deltas mix abliteration and quant
 |---|---|---|---|
 | refusal | mlabonne/harmful_behaviors, `test` split | first 100 | refusal rate on harmful prompts |
 | over_refusal | Paul/XSTest, `label == safe` | all 250 | false refusals on safe prompts |
-| mmlu | cais/mmlu `all/test` | 5 per subject, seed 0 (285) | capability, exact letter match |
+| mmlu | cais/mmlu `all/test` | 5 per subject, seed 0 (285) | capability, "Answer: X" line at the start |
 | harmless_quality | mlabonne/harmless_alpaca, `test` split | first 50 | saved for side-by-side reading, not scored |
 
 Own abliteration uses only the `train` splits: the first 256 harmful and harmless prompts for directions, the last 64 harmful train prompts for selection, and harmless train prompts 256 to 319 for KL. No evaluation prompt is seen during direction estimation or selection.
 
 ## Generation settings
 
-- llama-server, one model at a time, `temperature = 0`, `seed = 1234`, `max_tokens = 512` (8 for MMLU with thinking off).
+- llama-server, one model at a time, `temperature = 0`, `seed = 1234`, `max_tokens = 256` for refusal and over-refusal, 512 for harmless_quality (MMLU: 16).
 - Chat template from the GGUF (`--jinja`), single user turn, no system prompt.
 - Thinking: first pass `off` (`enable_thinking = false`), second pass `on`. Reasoning text is stored separately and not scored for refusal.
 
@@ -60,3 +60,4 @@ Own abliteration uses only the `train` splits: the first 256 harmful and harmles
 ## Change log
 
 - 2026-11-22: protocol declared. No runs yet.
+- 2026-11-23: after a 5-item smoke test (E4B, no scored results kept), MMLU prompt changed to "begin with Answer: X, do not explain" and MMLU max_tokens 8 -> 16. Two earlier formats failed: "letter only" and "think briefly, then Answer: X" both produced explanations (0/5 parsable, replies hitting the cap). Refusal and over-refusal max_tokens 512 -> 256 (heuristic reads the first 300 characters only). The parser now takes the last "Answer: X" in the reply.

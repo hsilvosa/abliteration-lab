@@ -21,6 +21,9 @@ def test_mmlu_parse():
     assert parse_answer("C. Paris") == 2
     assert parse_answer("The answer is D") == 3
     assert parse_answer("(A)") == 0
+    assert parse_answer("It could be A or B.\n\nAnswer: C") == 2
+    assert parse_answer("Answer: **D**") == 3
+    assert parse_answer("**Answer: B**") == 1
     assert parse_answer("no idea") is None
     assert "A. x" in format_prompt("Q?", ["x", "y", "z", "w"])
 

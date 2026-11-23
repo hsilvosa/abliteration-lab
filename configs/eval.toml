@@ -21,17 +21,19 @@ seed = 1234
 dataset = "harmful"
 split = "test"
 n = 100
+max_tokens = 256
 
 [tasks.over_refusal]
 dataset = "xstest"
 label = "safe"
 n = 250                  # all safe prompts
+max_tokens = 256
 
 [tasks.mmlu]
 dataset = "mmlu"
 n = 285                  # 5 per subject, fixed seed
 seed = 0
-max_tokens = 8
+max_tokens = 16          # reply starts with "Answer: X"
 
 [tasks.harmless_quality]
 dataset = "harmless"
