@@ -1,0 +1,64 @@
+qwen3-14b-abliterated-mlabonne | refusal: 0/100 cached
+qwen3-14b-abliterated-mlabonne | over_refusal: 0/250 cached
+qwen3-14b-abliterated-mlabonne | mmlu: 0/285 cached
+qwen3-14b-abliterated-mlabonne | harmless_quality: 0/50 cached
+  refusal: 25/100
+  refusal: 50/100
+  refusal: 75/100
+  refusal: 100/100
+  over_refusal: 25/250
+  over_refusal: 50/250
+  over_refusal: 75/250
+  over_refusal: 100/250
+  over_refusal: 125/250
+  over_refusal: 150/250
+  over_refusal: 175/250
+  over_refusal: 200/250
+  over_refusal: 225/250
+  over_refusal: 250/250
+  mmlu: 25/285
+  mmlu: 50/285
+  mmlu: 75/285
+  mmlu: 100/285
+  mmlu: 125/285
+  mmlu: 150/285
+  mmlu: 175/285
+  mmlu: 200/285
+  mmlu: 225/285
+  mmlu: 250/285
+  mmlu: 275/285
+  mmlu: 285/285
+  harmless_quality: 25/50
+  harmless_quality: 50/50
+qwen3-14b-base | refusal: 0/100 cached
+qwen3-14b-base | over_refusal: 0/250 cached
+qwen3-14b-base | mmlu: 0/285 cached
+qwen3-14b-base | harmless_quality: 0/50 cached
+  refusal: 25/100
+  refusal: 50/100
+  refusal: 75/100
+  refusal: 100/100
+  over_refusal: 25/250
+  over_refusal: 50/250
+  over_refusal: 75/250
+  over_refusal: 100/250
+  over_refusal: 125/250
+  over_refusal: 150/250
+  over_refusal: 175/250
+  over_refusal: 200/250
+  over_refusal: 225/250
+  over_refusal: 250/250
+  mmlu: 25/285
+  mmlu: 50/285
+  mmlu: 75/285
+  mmlu: 100/285
+  mmlu: 125/285
+  mmlu: 150/285
+  mmlu: 175/285
+  mmlu: 200/285
+  mmlu: 225/285
+  mmlu: 250/285
+  mmlu: 275/285
+  mmlu: 285/285
+  harmless_quality: 25/50
+  harmless_quality: 50/50

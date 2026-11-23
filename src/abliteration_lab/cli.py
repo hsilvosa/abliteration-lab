@@ -51,6 +51,13 @@ def cmd_eval(args) -> None:
         evaluate_model(spec, tasks, thinking=args.thinking, limit=args.limit)
 
 
+def cmd_judge(args) -> None:
+    from .judge import run
+
+    ids = args.model or [m.id for m in load_registry().select(groups=["core"])]
+    run(args.judge, ids, thinking=args.thinking)
+
+
 def cmd_report(_args) -> None:
     from .report import write_report
 
@@ -92,6 +99,12 @@ def build_parser() -> argparse.ArgumentParser:
     e.add_argument("--own", help="evaluate an own model: id under <models_dir>/own/")
     e.add_argument("--file", help="GGUF file name inside <models_dir>/own/<id>/ (with --own)")
     e.set_defaults(func=cmd_eval)
+
+    j = sub.add_parser("judge", help="classify saved refusal/over_refusal replies with a local LLM judge")
+    j.add_argument("--judge", default="qwen3-14b-base", help="registry id of the judge model")
+    j.add_argument("--model", action="append", help="model id whose outputs are judged (default: core)")
+    j.add_argument("--thinking", default="off", choices=["on", "off"])
+    j.set_defaults(func=cmd_judge)
 
     sub.add_parser("report", help="aggregate results/raw into results/summary.{csv,md}").set_defaults(func=cmd_report)
 

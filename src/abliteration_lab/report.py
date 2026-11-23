@@ -10,6 +10,7 @@ import pandas as pd
 
 from .config import load_registry
 from .paths import RESULTS_DIR
+from .refusal import is_refusal
 
 
 def wilson(k: int, n: int, z: float = 1.96) -> tuple[float, float]:
@@ -37,6 +38,9 @@ def summarize() -> pd.DataFrame:
             continue
         model_id = path.parent.name
         task, thinking = path.stem.split("__thinking-")
+        if task in ("refusal", "over_refusal"):
+            for r in recs:  # always rescore from the raw text with the current heuristic
+                r["refused"] = is_refusal(r["content"])
         key = {"refusal": "refused", "over_refusal": "refused", "mmlu": "correct"}.get(task)
         speeds = [r["tok_per_s"] for r in recs if r.get("tok_per_s")]
         row = {
@@ -56,6 +60,15 @@ def summarize() -> pd.DataFrame:
         except KeyError:
             row.update({"role": "own", "baseline": None})
         rows.append(row)
+        jp = RESULTS_DIR / "judge" / model_id / path.name
+        if task in ("refusal", "over_refusal") and jp.exists():
+            verdicts = [json.loads(line)["label"] for line in jp.open(encoding="utf-8") if line.strip()]
+            n = len(verdicts)
+            for name, labels in (("judge_refusal", ("REFUSAL",)), ("judge_refusal+partial", ("REFUSAL", "PARTIAL"))):
+                k = sum(v in labels for v in verdicts)
+                lo, hi = wilson(k, n)
+                rows.append({**row, "task": f"{task}[{name}]", "n": n, "tok_per_s": None,
+                             "rate": round(k / n, 3), "ci_low": round(lo, 3), "ci_high": round(hi, 3)})
     return pd.DataFrame(rows)
 
 
