@@ -21,3 +21,4 @@ configs/*.local.toml
 private/
 results/logs/
 results/judge_v1_discarded/
+results/judge/
