@@ -1,0 +1,25 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install base package and dev dependencies
+        run: |
+          uv venv .venv
+          uv pip install --python .venv -e ".[dev]"
+
+      - name: Run unit tests (non-torch suite)
+        run: .venv/bin/pytest -v

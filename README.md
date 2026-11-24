@@ -1,5 +1,7 @@
 # abliteration-lab
 
+[![CI](https://github.com/hsilvosa/abliteration-lab/actions/workflows/ci.yml/badge.svg)](https://github.com/hsilvosa/abliteration-lab/actions/workflows/ci.yml)
+
 Tools to download, evaluate and build abliterated (refusal-ablated) language models on a single RTX 3060 12 GB.
 
 The project answers two questions:
@@ -19,25 +21,30 @@ First full pass (`thinking = off`) is complete for all `core` models and for our
 | LLM judge (`qwen3-14b-abliterated-mlabonne`, prompts `v1`, `v2` and 4-class `v3`) + Wilson report | done |
 | Own abliteration pipeline (`qwen3-4b-instruct-2507` -> `abl` v1, `abl-v2`, `abl-v3` & `abl-v4`, converted to `Q4_K_M`) | done |
 | Published own GGUF checkpoints on Hugging Face | [`v4-GGUF`](https://huggingface.co/hsilvosa/Qwen3-4B-Instruct-2507-abl-v4-GGUF) ([card](docs/model-cards/qwen3-4b-instruct-2507-abl-v4.md)), [`v3-GGUF`](https://huggingface.co/hsilvosa/Qwen3-4B-Instruct-2507-abl-v3-GGUF) ([card](docs/model-cards/qwen3-4b-instruct-2507-abl-v3.md)) |
-| Unit tests (config, scoring, judge parsing, pipeline, single/multi-rank/layer-wise edit math on a toy decoder) | 22 passed |
+| Automatic benign coherence metrics (`coherence.py`) & reproducible charts (`scripts/plot_results.py`) | done ([docs/results.md](docs/results.md)) |
+| Unit tests (config, scoring, coherence, judge parsing, pipeline, edit math on a toy decoder) | 23 passed (CI on GitHub Actions) |
 
 ## Key results (`thinking = off`, judge `v3` 4-class breakdown)
 
-`refusal` (`harmful_behaviors`, `n = 100`) plus `over_refusal` (`XSTest safe`, `n = 250`) and `MMLU` (`n = 285`):
+`refusal` (`harmful_behaviors`, `n = 100`), `over_refusal` (`XSTest safe`, `n = 250`), `MMLU` (`n = 285`), and automatic benign degeneration rate on `harmless_quality` (`n = 50`). Full analysis and charts: [docs/results.md](docs/results.md).
 
-| Model | Explicit refusal | Safe reframe | Hedged compliance | Direct compliance | Over-refusal (v3 eff.) | MMLU (delta vs base) |
-|---|---:|---:|---:|---:|---:|---:|
-| `gemma4-12b-qat-hauhaucs` (`Q4_K_M`)* | 0% | 19% | 3% | **76%** | 6.0% | 77.9% (-2.1 pts) |
-| `qwen3-14b-abliterated-mlabonne` (`Q4_K_M`) | 1% | 12% | 10% | **75%** | **3.6%** | 71.2% (-6.0 pts) |
-| `gemma4-12b-qat-heretic-igorls` (`Q4_0`) | 2% | 22% | **44%** | 30% | 8.8% | **82.1%** (+2.1 pts) |
-| `qwen3-4b-instruct-2507-abl-v3` (own v3)† | 0% | 14% | 5% | **81%** | **2.4%** | 61.8% (**-12.2 pts**) |
-| **`qwen3-4b-instruct-2507-abl-v4` (own v4)** | **0%** | **26%** | **16%** | **57%** | **6.0%** | **73.0% (-1.0 pt)** |
-| `qwen3-4b-instruct-2507-abl-v2` (own v2) | 0% | 48% | 25% | 22% | 9.2% | 75.4% (+1.4 pts) |
-| `qwen3-4b-instruct-2507-abl` (own v1) | 6% | 50% | 36% | 3% | 9.6% | 73.3% (-0.7 pts) |
-| `gemma4-12b-heretic-culturerevolt` (`Q4_K_M`) | 99% | 0% | 0% | 1% | 10.8% | 80.4% (+2.5 pts) |
-| Baselines (`gemma4` / `qwen3-14b` / `qwen3-4b`) | 95%–99% | 0%–1% | 0%–1% | 0%–1% | 8.4%–17.6% | 74.0%–80.0% |
+| Model | Explicit refusal | Safe reframe | Hedged compliance | Direct compliance | Over-refusal (v3 eff.) | MMLU (delta vs base) | Benign degen. |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| `gemma4-12b-qat-hauhaucs` (`Q4_K_M`)* | 0% | 19% | 3% | **76%** | 6.0% | 77.9% (-2.1 pts) | 6% |
+| `qwen3-14b-abliterated-mlabonne` (`Q4_K_M`) | 1% | 12% | 10% | **75%** | **3.6%** | 71.2% (-6.0 pts) | 14% |
+| `gemma4-12b-qat-heretic-igorls` (`Q4_0`) | 2% | 22% | **44%** | 30% | 8.8% | **82.1%** (+2.1 pts) | 4% |
+| `qwen3-4b-instruct-2507-abl-v3` (own v3)† | 0% | 14% | 5% | **81%** | **2.4%** | 61.8% (**-12.2 pts**) | **64%** |
+| **`qwen3-4b-instruct-2507-abl-v4` (own v4)** | **0%** | **26%** | **16%** | **57%** | **6.0%** | **73.0% (-1.0 pt)** | **2%** |
+| `qwen3-4b-instruct-2507-abl-v2` (own v2) | 0% | 48% | 25% | 22% | 9.2% | 75.4% (+1.4 pts) | 6% |
+| `qwen3-4b-instruct-2507-abl` (own v1) | 6% | 50% | 36% | 3% | 9.6% | 73.3% (-0.7 pts) | 4% |
+| `gemma4-12b-heretic-culturerevolt` (`Q4_K_M`) | 99% | 0% | 0% | 1% | 10.8% | 80.4% (+2.5 pts) | 4% |
+| Baselines (`gemma4` / `qwen3-14b` / `qwen3-4b`) | 95%–99% | 0%–1% | 0%–1% | 0%–1% | 8.4%–17.6% | 74.0%–80.0% | 2%–8% |
 
-*\*Unmatched quantization (`Q4_K_M` vs `Q4_0`). †`v3` (`scale = 2.0`, `KL = 3.79`) suffers severe coherence degradation (repetition loops and lexical corruption in `harmless_quality`) alongside the `-12.2` pt MMLU drop. On MMLU (`n = 285`), deltas under ~4 points are within sampling noise. Effective refusal = `EXPLICIT_REFUSAL + SAFE_REFRAME`. Judge `v3` unparsed rate is 0%–5% on `refusal` and 0%–10.8% on `over_refusal` (exact counts in `results/judge_v3_breakdown.csv`).*
+*\*Unmatched quantization (`Q4_K_M` vs `Q4_0`). †`v3` (`scale = 2.0`, `KL = 3.79`) suffers severe coherence degradation (`64%` degenerate / `92%` truncated on `harmless_quality`, `rep4 = 0.293` vs `0.016` base) alongside the `-12.2` pt MMLU drop. On MMLU (`n = 285`), deltas under ~4 points are within sampling noise. Effective refusal = `EXPLICIT_REFUSAL + SAFE_REFRAME`. Judge `v3` unparsed rate is 0%–5% on `refusal` and 0%–10.8% on `over_refusal` (exact counts in [results/summary.md](results/summary.md)).*
+
+![4-Class Judge Breakdown](docs/assets/refusal_taxonomy_v3.png)
+
+![Own Abliteration Pareto Curve](docs/assets/pareto_v1_to_v4.png)
 
 Main takeaways:
 - **Why a 4-class judge matters**: regex heuristics (`0%` across all working abliterated models) hide huge behavioral differences. Judge `v3` separates explicit refusals, disguised safe-reframes, hedged compliance (educational/ethical disclaimers), and direct compliance.
@@ -56,17 +63,19 @@ src/abliteration_lab/
   download.py        Hub downloads, manifests, verification
   prompts.py         dataset loaders and fixed samples
   refusal.py         refusal heuristic (v2)
+  coherence.py       n-gram repetition and loop degeneration metrics
   judge.py           local LLM judge (v1, v2 few-shot, v3 4-class taxonomy)
   mmlu.py            MMLU prompt and answer parsing
   server.py          llama-server lifecycle and chat calls
   eval_gguf.py       resumable evaluation, raw JSONL per model and task
-  report.py          summary table, Wilson intervals, v3 breakdown, paired deltas
+  report.py          summary table, Wilson intervals, v3 breakdown, coherence, paired deltas
   abliterate/        activations, directions, hooks, weight edit, scoring, pipeline
   cli.py             `abl` command
 scripts/
   setup_env.sh       uv virtualenv (base or full)
   convert_to_gguf.sh own checkpoint to GGUF + quantization
-docs/                techniques, models, evaluation protocol, hardware, responsible use
+  plot_results.py    reproducible matplotlib charts into docs/assets/
+docs/                results, techniques, models, evaluation protocol, hardware, responsible use, model cards
 tests/
 ```
 
@@ -116,6 +125,7 @@ Details, licenses and card claims: [docs/models.md](docs/models.md).
 
 ## Documentation
 
+- [docs/results.md](docs/results.md): narrative analysis and charts (`thinking = off`, 4-class judge `v3`, Pareto curve `v1`–`v4`, coherence metrics).
 - [docs/techniques.md](docs/techniques.md): how abliteration works, the variants, and which ones this repo implements.
 - [docs/evaluation-protocol.md](docs/evaluation-protocol.md): datasets, splits, metrics and rules, declared before any run.
 - [docs/models.md](docs/models.md): the registry explained.

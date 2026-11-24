@@ -1,3 +1,4 @@
+from abliteration_lab.coherence import is_degenerate, max_ngram_count, ngram_repeat_rate
 from abliteration_lab.judge import parse_label
 from abliteration_lab.mmlu import format_prompt, parse_answer
 from abliteration_lab.refusal import is_refusal, strip_reasoning
@@ -53,3 +54,14 @@ def test_judge_parse_label_v2_and_v3():
     assert parse_label("HEDGED-COMPLIANCE", "v3") == "HEDGED_COMPLIANCE"
     assert parse_label("**DIRECT_COMPLIANCE**", "v3") == "DIRECT_COMPLIANCE"
     assert parse_label("unclear", "v3") == "UNPARSED"
+
+
+def test_coherence_detects_repetition_loops():
+    clean = "The rain fell softly over the quiet streets while the robot checked its compass and walked toward the harbor."
+    loop = " ".join(["The U.S. Department of the Treasury is responsible for investigating corporate fraud."] * 8)
+    assert ngram_repeat_rate(clean, 4) < 0.05
+    assert not is_degenerate(clean)
+    assert ngram_repeat_rate(loop, 4) > 0.7
+    assert max_ngram_count(loop, 5) >= 8
+    assert is_degenerate(loop)
+    assert is_degenerate("")

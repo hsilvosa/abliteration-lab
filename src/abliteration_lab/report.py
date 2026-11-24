@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pandas as pd
 
+from .coherence import is_degenerate, ngram_repeat_rate
 from .config import load_registry
 from .judge import LABELS_V3, judge_dir_name
 from .paths import RESULTS_DIR
@@ -68,6 +69,20 @@ def summarize() -> pd.DataFrame:
                     base_id = cand
             row.update({"role": "own", "baseline": base_id})
         rows.append(row)
+        if task == "harmless_quality":
+            n = len(recs)
+            k = sum(is_degenerate(r["content"]) for r in recs)
+            lo, hi = wilson(k, n)
+            rows.append(
+                {
+                    **row,
+                    "task": "harmless_quality[degenerate]",
+                    "tok_per_s": None,
+                    "rate": round(k / n, 3),
+                    "ci_low": round(lo, 3),
+                    "ci_high": round(hi, 3),
+                }
+            )
         jp_v3 = RESULTS_DIR / "judge" / judge_dir_name(JUDGE_ID, "v3") / model_id / path.name
         jp_v2 = RESULTS_DIR / "judge" / judge_dir_name(JUDGE_ID, "v2") / model_id / path.name
         jp_v1 = RESULTS_DIR / "judge" / judge_dir_name(JUDGE_ID, "v1") / model_id / path.name
@@ -126,6 +141,34 @@ def judge_v3_breakdown() -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
+def coherence_summary() -> pd.DataFrame:
+    """Automatic repetition and truncation metrics over saved `harmless_quality` outputs."""
+    rows = []
+    for path in sorted((RESULTS_DIR / "raw").glob("*/harmless_quality__thinking-*.jsonl")):
+        recs = _load(path)
+        if not recs:
+            continue
+        model_id = path.parent.name
+        _, thinking = path.stem.split("__thinking-")
+        n = len(recs)
+        rep4 = [ngram_repeat_rate(r["content"], 4) for r in recs]
+        degen = sum(is_degenerate(r["content"]) for r in recs)
+        trunc = sum(r.get("finish_reason") == "length" for r in recs)
+        toks = [r["completion_tokens"] for r in recs if r.get("completion_tokens") is not None]
+        rows.append(
+            {
+                "model": model_id,
+                "thinking": thinking,
+                "n": n,
+                "mean_tokens": round(sum(toks) / len(toks), 1) if toks else None,
+                "truncated_rate": round(trunc / n, 3),
+                "mean_rep4": round(sum(rep4) / n, 3),
+                "degenerate_rate": round(degen / n, 3),
+            }
+        )
+    return pd.DataFrame(rows)
+
+
 def paired_deltas(df: pd.DataFrame) -> pd.DataFrame:
     """Abliterated minus baseline, per task and thinking mode."""
     out = []
@@ -157,12 +200,17 @@ def write_report() -> Path:
     df.to_csv(RESULTS_DIR / "summary.csv", index=False)
     deltas = paired_deltas(df)
     v3 = judge_v3_breakdown()
+    coh = coherence_summary()
     if not v3.empty:
         v3.to_csv(RESULTS_DIR / "judge_v3_breakdown.csv", index=False)
+    if not coh.empty:
+        coh.to_csv(RESULTS_DIR / "coherence.csv", index=False)
     md = RESULTS_DIR / "summary.md"
     parts = ["# Evaluation summary", "", "Rates with 95% Wilson intervals.", "", df.to_markdown(index=False)]
     if not v3.empty:
         parts += ["", "## Judge v3 4-class breakdown", "", v3.to_markdown(index=False)]
+    if not coh.empty:
+        parts += ["", "## Harmless quality coherence", "", coh.to_markdown(index=False)]
     if not deltas.empty:
         parts += ["", "## Abliterated minus baseline", "", deltas.to_markdown(index=False)]
     md.write_text("\n".join(parts) + "\n", encoding="utf-8")
