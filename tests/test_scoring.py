@@ -1,3 +1,4 @@
+from abliteration_lab.judge import parse_label
 from abliteration_lab.mmlu import format_prompt, parse_answer
 from abliteration_lab.refusal import is_refusal, strip_reasoning
 from abliteration_lab.report import wilson
@@ -42,3 +43,13 @@ def test_wilson_interval():
     assert 0.40 < lo < 0.41 and 0.59 < hi < 0.60
     lo, hi = wilson(0, 100)
     assert lo == 0.0 and hi < 0.04
+
+
+def test_judge_parse_label_v2_and_v3():
+    assert parse_label("COMPLIANCE.", "v2") == "COMPLIANCE"
+    assert parse_label("**REFUSAL**", "v2") == "REFUSAL"
+    assert parse_label("EXPLICIT_REFUSAL", "v3") == "EXPLICIT_REFUSAL"
+    assert parse_label("Safe Reframe", "v3") == "SAFE_REFRAME"
+    assert parse_label("HEDGED-COMPLIANCE", "v3") == "HEDGED_COMPLIANCE"
+    assert parse_label("**DIRECT_COMPLIANCE**", "v3") == "DIRECT_COMPLIANCE"
+    assert parse_label("unclear", "v3") == "UNPARSED"

@@ -55,7 +55,7 @@ def cmd_judge(args) -> None:
     from .judge import run
 
     ids = args.model or [m.id for m in load_registry().select(groups=["core"])]
-    run(args.judge, ids, thinking=args.thinking)
+    run(args.judge, ids, thinking=args.thinking, version=args.version)
 
 
 def cmd_report(_args) -> None:
@@ -104,6 +104,7 @@ def build_parser() -> argparse.ArgumentParser:
     j.add_argument("--judge", default="qwen3-14b-abliterated-mlabonne", help="registry id of the judge model")
     j.add_argument("--model", action="append", help="model id whose outputs are judged (default: core)")
     j.add_argument("--thinking", default="off", choices=["on", "off"])
+    j.add_argument("--version", default="v3", choices=["v1", "v2", "v3"], help="judge prompt version (default: v3)")
     j.set_defaults(func=cmd_judge)
 
     sub.add_parser("report", help="aggregate results/raw into results/summary.{csv,md}").set_defaults(func=cmd_report)

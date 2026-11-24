@@ -61,6 +61,26 @@ def chat_batch(tokenizer, prompts: list[str], max_len: int, device: torch.device
 
 
 @torch.no_grad()
+def last_token_states(
+    model: nn.Module,
+    tokenizer,
+    prompts: list[str],
+    layer_indices: list[int],
+    batch_size: int,
+    max_len: int,
+) -> dict[int, torch.Tensor]:
+    """Per-prompt residual stream at the last prompt token, shape (n_prompts, d_model), float32 on CPU."""
+    device = next(model.parameters()).device
+    chunks: dict[int, list[torch.Tensor]] = {li: [] for li in layer_indices}
+    for start in range(0, len(prompts), batch_size):
+        batch = chat_batch(tokenizer, prompts[start : start + batch_size], max_len, device)
+        out = model(**batch, output_hidden_states=True, use_cache=False)
+        for li in layer_indices:
+            chunks[li].append(out.hidden_states[li][:, -1, :].float().cpu())
+    return {li: torch.cat(chunks[li], dim=0) for li in layer_indices}
+
+
+@torch.no_grad()
 def mean_last_token_states(
     model: nn.Module,
     tokenizer,
@@ -74,14 +94,5 @@ def mean_last_token_states(
     `hidden_states[i]` from transformers is the residual stream entering layer i
     (index 0 is the embedding output). Means are accumulated in float32 on the CPU.
     """
-    device = next(model.parameters()).device
-    sums: dict[int, torch.Tensor] = {}
-    count = 0
-    for start in range(0, len(prompts), batch_size):
-        batch = chat_batch(tokenizer, prompts[start : start + batch_size], max_len, device)
-        out = model(**batch, output_hidden_states=True, use_cache=False)
-        for li in layer_indices:
-            h = out.hidden_states[li][:, -1, :].float().cpu()  # left padding: last position is real
-            sums[li] = sums.get(li, torch.zeros(h.shape[-1])) + h.sum(dim=0)
-        count += batch["input_ids"].shape[0]
-    return {li: s / count for li, s in sums.items()}
+    states = last_token_states(model, tokenizer, prompts, layer_indices, batch_size, max_len)
+    return {li: s.mean(dim=0) for li, s in states.items()}

@@ -15,30 +15,44 @@ import torch
 from torch import nn
 
 from .activations import find_decoder_layers, find_embedding, write_modules
+from .edit import _orthonormal_basis
 
 
 def _make_hook(r: torch.Tensor, scale: float):
+    q_cpu = _orthonormal_basis(r, torch.device("cpu"))
+    cache: dict[tuple[torch.device, torch.dtype], torch.Tensor] = {}
+
     def hook(_module, _inputs, output):
-        rr = r.to(output.device, output.dtype)
-        return output - scale * (output @ rr).unsqueeze(-1) * rr
+        key = (output.device, output.dtype)
+        qq = cache.get(key)
+        if qq is None:
+            qq = q_cpu.to(output.device, output.dtype)
+            cache[key] = qq
+        return output - scale * ((output @ qq.T) @ qq)
 
     return hook
 
 
 @contextmanager
 def ablation_hooks(
-    model: nn.Module, r: torch.Tensor, layer_range: range | None = None, scale: float = 1.0, embeddings: bool = True
+    model: nn.Module,
+    r: torch.Tensor | dict[int, torch.Tensor],
+    layer_range: range | None = None,
+    scale: float = 1.0,
+    embeddings: bool = True,
 ) -> Iterator[None]:
-    r = r / r.norm()
     layers = find_decoder_layers(model)
     layer_range = layer_range if layer_range is not None else range(len(layers))
+    layer_wise = isinstance(r, dict)
     handles = []
     try:
         if embeddings:
-            handles.append(find_embedding(model).register_forward_hook(_make_hook(r, scale)))
+            r_emb = r.get(-1, r[min(layer_range)]) if layer_wise else r
+            handles.append(find_embedding(model).register_forward_hook(_make_hook(r_emb, scale)))
         for i in layer_range:
+            ri = r[i] if layer_wise else r
             for lin in write_modules(layers[i]):
-                handles.append(lin.register_forward_hook(_make_hook(r, scale)))
+                handles.append(lin.register_forward_hook(_make_hook(ri, scale)))
         yield
     finally:
         for h in handles:

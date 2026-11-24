@@ -1,7 +1,7 @@
 # Settings for our own abliteration run (transformers, bf16).
 
 source_model = "qwen3-4b-instruct-2507"   # id from configs/models.toml (group "source")
-output_name = "qwen3-4b-instruct-2507-abl"
+output_name = "qwen3-4b-instruct-2507-abl-v4"
 dtype = "bfloat16"
 device = "cuda"
 load_in_4bit = false                      # bitsandbytes; direction search only, no saved edit
@@ -11,7 +11,8 @@ n_train = 256              # prompts per class (harmful / harmless) from the tra
 batch_size = 16
 max_prompt_tokens = 256
 # Candidate layers as fractions of depth; directions are computed for each.
-layer_fractions = [0.3, 0.4, 0.5, 0.6, 0.7]
+# v4 isolates v3's winning layer (0.5 -> layer 18) at v2's edit strength.
+layer_fractions = [0.5]
 # "mean_diff" (Arditi et al.) or "projected" (remove the harmless-mean component).
 kind = "projected"
 
@@ -19,12 +20,12 @@ kind = "projected"
 n_val = 64                 # held-out harmful prompts (from the end of the train split)
 n_kl = 64                  # harmless prompts for first-token KL
 max_new_tokens = 64
-kl_max = 0.2               # reject candidates above this KL
+kl_max = 1.0               # v4: stay in v2's capability range while changing the layer
 # Rule: minimum refusals among candidates with KL <= kl_max; ties -> lower KL.
 
 [edit]
 # "orthogonal" (W - r r^T W) or "norm_preserving" (same, then restore column norms).
 mode = "norm_preserving"
-scale = 1.0                # 1.0 removes the full component
-edit_embeddings = true
-layer_range = "all"        # "all" or [start, end) as fractions of depth, e.g. [0.2, 0.9]
+scale = 1.5                # v4: v2's scale, so KL/MMLU should stay put; only the layer changes
+edit_embeddings = false    # v4: v3's embedding edit (and untied lm_head) was the main KL/MMLU cost
+layer_range = [0.25, 0.95] # v4: restore v2's range instead of v3's [0.15, 0.98)

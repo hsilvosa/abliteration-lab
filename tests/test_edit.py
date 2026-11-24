@@ -127,3 +127,25 @@ def test_projected_direction_is_orthogonal_to_harmless_mean():
     r = projected(harmful, harmless)
     assert abs(float(r @ harmless)) < 1e-5
     assert abs(float(mean_diff(harmful, harmless).norm()) - 1) < 1e-5
+
+
+def test_rank2_projection_removes_subspace():
+    torch.manual_seed(6)
+    w = torch.randn(D, 8)
+    basis = torch.randn(2, D)
+    w2 = orthogonalize_linear_weight(w, basis, norm_preserving=True)
+    assert torch.allclose(w.norm(dim=0), w2.norm(dim=0), atol=1e-5)
+    assert torch.allclose(basis @ w2, torch.zeros(2, 8), atol=1e-5)
+
+
+def test_layer_wise_weight_edit_matches_hooks():
+    torch.manual_seed(7)
+    model = Toy(n_layers=3)
+    r_dict = {0: _unit(D), 1: _unit(D), 2: _unit(D)}
+    ids = torch.randint(0, V, (2, 5))
+    with torch.no_grad(), ablation_hooks(model, r_dict, embeddings=False):
+        hooked = model(ids)
+    apply_edit(model, r_dict, range(3), edit_embeddings=False)
+    with torch.no_grad():
+        edited = model(ids)
+    assert torch.allclose(hooked, edited, atol=1e-5)

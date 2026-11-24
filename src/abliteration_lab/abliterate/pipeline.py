@@ -22,6 +22,12 @@ from ..paths import own_models_dir
 
 
 def _select(candidates: list[dict[str, Any]], kl_max: float) -> dict[str, Any]:
+    """Minimum refusals within the KL budget; ties -> lowest KL (least collateral damage).
+
+    The heuristic only counts explicit refusals, so several aggressive candidates
+    can all score zero. KL then picks the cheapest of them; it is the edit strength
+    (scale, layers, embeddings) that targets safe-reframes, not the KL tie-break.
+    """
     ok = [c for c in candidates if c["kl"] <= kl_max]
     if not ok:
         raise RuntimeError(f"no candidate with KL <= {kl_max}; see candidates.json and adjust the protocol")
@@ -65,7 +71,7 @@ def run(dry_run: bool = False) -> None:
     t0 = time.monotonic()
     dtype = getattr(torch, cfg["dtype"])
     tok = AutoTokenizer.from_pretrained(spec.local_dir)
-    load_kw: dict[str, Any] = {"torch_dtype": dtype, "device_map": cfg["device"]}
+    load_kw: dict[str, Any] = {"dtype": dtype, "device_map": cfg["device"]}
     if cfg.get("load_in_4bit"):
         from transformers import BitsAndBytesConfig
 
@@ -104,6 +110,10 @@ def run(dry_run: bool = False) -> None:
         (out_dir / "candidates.json").write_text(json.dumps(candidates, indent=2), encoding="utf-8")
         print("load_in_4bit: direction search only. Set load_in_4bit = false to edit and save weights.")
         return
+    # Move to CPU before untying lm_head and float32 weight edits to avoid VRAM spikes on 12 GB GPUs.
+    model.to("cpu")
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
     record = apply_edit(model, r, edit_range, e["scale"], e["mode"] == "norm_preserving", e["edit_embeddings"])
 
     out_dir.mkdir(parents=True, exist_ok=True)
